@@ -16,6 +16,29 @@ const userRoutes = require('./routes/users');
 
 const app = express();
 
+// Middleware
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://tea-platform.vercel.app',
+  'https://client-nu-azure.vercel.app',
+  process.env.CLIENT_URL
+].filter(Boolean);
+
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+app.use(express.json());
+app.use(morgan('dev'));
+app.use('/uploads', express.static('uploads'));
+
 const connectDB = async () => {
   if (mongoose.connection.readyState >= 1) return;
   try {
@@ -38,28 +61,6 @@ app.use(async (req, res, next) => {
     next(err);
   }
 });
-
-// Middleware
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://tea-platform.vercel.app',
-  process.env.CLIENT_URL
-].filter(Boolean);
-
-app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('vercel.app')) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
-}));
-app.use(express.json());
-app.use(morgan('dev'));
-app.use('/uploads', express.static('uploads'));
 
 // Swagger UI
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDefinition));
@@ -89,11 +90,12 @@ const PORT = process.env.PORT || 5000;
 
 
 if (process.env.NODE_ENV !== 'production') {
-  connectDB().then(() => {
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📄 Swagger docs at http://localhost:${PORT}/api-docs`);
-    });
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📄 Swagger docs at http://localhost:${PORT}/api-docs`);
+  });
+  connectDB().catch((err) => {
+    console.error('⚠️  Server started but DB connection failed. Fix MONGODB_URI in .env');
   });
 }
 
