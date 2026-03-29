@@ -19,17 +19,24 @@ const app = express();
 const connectDB = async () => {
   if (mongoose.connection.readyState >= 1) return;
   try {
-    await mongoose.connect(process.env.MONGODB_URI);
+    await mongoose.connect(process.env.MONGODB_URI, {
+      serverSelectionTimeoutMS: 5000,
+    });
     console.log('✅ MongoDB connected');
   } catch (err) {
     console.error('❌ MongoDB connection error:', err);
+    throw new Error('Database Connection Failed: ' + err.message);
   }
 };
 
 // Ensure DB is connected for serverless function requests
 app.use(async (req, res, next) => {
-  await connectDB();
-  next();
+  try {
+    await connectDB();
+    next();
+  } catch (err) {
+    next(err);
+  }
 });
 
 // Middleware
