@@ -16,6 +16,22 @@ const userRoutes = require('./routes/users');
 
 const app = express();
 
+const connectDB = async () => {
+  if (mongoose.connection.readyState >= 1) return;
+  try {
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('✅ MongoDB connected');
+  } catch (err) {
+    console.error('❌ MongoDB connection error:', err);
+  }
+};
+
+// Ensure DB is connected for serverless function requests
+app.use(async (req, res, next) => {
+  await connectDB();
+  next();
+});
+
 // Middleware
 const allowedOrigins = [
   'http://localhost:5173',
@@ -64,15 +80,6 @@ app.use((err, req, res, next) => {
 // Connect DB and start server
 const PORT = process.env.PORT || 5000;
 
-const connectDB = async () => {
-  if (mongoose.connection.readyState >= 1) return;
-  try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ MongoDB connected');
-  } catch (err) {
-    console.error('❌ MongoDB connection error:', err);
-  }
-};
 
 if (process.env.NODE_ENV !== 'production') {
   connectDB().then(() => {
@@ -81,8 +88,6 @@ if (process.env.NODE_ENV !== 'production') {
       console.log(`📄 Swagger docs at http://localhost:${PORT}/api-docs`);
     });
   });
-} else {
-  connectDB();
 }
 
 module.exports = app;
