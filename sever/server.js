@@ -17,7 +17,23 @@ const userRoutes = require('./routes/users');
 const app = express();
 
 // Middleware
-app.use(cors({ origin: process.env.CLIENT_URL || 'https://tea-platform.vercel.app', credentials: true }));
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://tea-platform.vercel.app',
+  process.env.CLIENT_URL
+].filter(Boolean);
+
+app.use(cors({
+  origin: function(origin, callback) {
+    if (!origin || allowedOrigins.includes(origin) || origin.endsWith('vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
 app.use(express.json());
 app.use(morgan('dev'));
 app.use('/uploads', express.static('uploads'));
