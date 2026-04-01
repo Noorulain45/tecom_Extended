@@ -1,11 +1,11 @@
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDefinition = require('./swagger');
-
-require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
@@ -39,11 +39,12 @@ app.use(express.json());
 app.use(morgan('dev'));
 app.use('/uploads', express.static('uploads'));
 
-const connectDB = async () => {
-  if (mongoose.connection.readyState >= 1) return;
+const connectDB = async () => { 
+  // if (mongoose.connection.readyState >= 1) return;
   try {
+    // console.log("process.env.MONGODB_URI:",process.env.MONGODB_URI)
     await mongoose.connect(process.env.MONGODB_URI, {
-      serverSelectionTimeoutMS: 5000,
+      serverSelectionTimeoutMS: 10000,
     });
     console.log('✅ MongoDB connected');
   } catch (err) {
@@ -86,15 +87,14 @@ app.use((err, req, res, next) => {
 });
 
 // Connect DB and start server
-const PORT = process.env.PORT || 5000;
-
+const PORT = process.env.PORT || 3001;
 
 if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📄 Swagger docs at http://localhost:${PORT}/api-docs`);
   });
-  connectDB().catch((err) => {
+  connectDB().catch(() => {
     console.error('⚠️  Server started but DB connection failed. Fix MONGODB_URI in .env');
   });
 }
