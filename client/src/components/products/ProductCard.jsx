@@ -5,7 +5,6 @@ import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import { useCart } from '../../context/CartContext';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
 
 const categoryColors = {
   'green-tea': 'bg-sage-100 text-sage-700',
@@ -38,7 +37,7 @@ const ProductCard = ({ product }) => {
 
   const handleQuickAdd = async (e) => {
     e.preventDefault();
-    if (!user) { toast.error('Please sign in to add to cart'); navigate('/login'); return; }
+    if (!user) { navigate('/login', { state: { from: { pathname: `/products/${product._id}` } } }); return; }
     if (!defaultVariant) return;
     await addToCart(product._id, defaultVariant._id, 1);
   };

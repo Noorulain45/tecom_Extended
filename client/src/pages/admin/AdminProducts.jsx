@@ -17,21 +17,21 @@ const EMPTY_PRODUCT = {
   origin: '',
   thumbnail: '',
   isFeatured: false,
-  // Badges & Variants
   badges: '',        // comma-separated e.g. "Organic, Vegan, Origin tea"
-  variants: '',      // comma-separated e.g. "50g bag, 100g bag, 250g bag"
+  // Variants: array of { name, priceModifier, stock, image }
+  variants: [{ name: '', priceModifier: 0, stock: 0, image: '' }],
   // Steeping Instructions
-  servingSize: '',   // e.g. "2 tsp per cup / 1 tsp per pot"
-  temperature: '',   // e.g. "90°C"
-  brewingTime: '',   // e.g. "1 min"
-  coolAfter: '',     // e.g. "5 minutes"
+  servingSize: '',
+  temperature: '',
+  brewingTime: '',
+  coolAfter: '',
   // About this tea
-  flavor: '',        // e.g. "Spicy, Floral"
-  quality: '',       // e.g. "Smooth"
+  flavor: '',
+  quality: '',
   caffeineLevel: 'medium',
-  allergens: '',     // e.g. "Nut-Free"
-  ingredients: '',   // e.g. "Black tea, Cinnamon, Ginger..."
-  tags: '',          // comma-separated
+  allergens: '',
+  ingredients: '',
+  tags: '',
 };
 
 const CATEGORIES = ['green-tea','black-tea','herbal-tea','oolong-tea','white-tea','chai','matcha'];
@@ -69,12 +69,12 @@ const ProductFormModal = ({ product, onClose, onSave }) => {
       ? {
           ...EMPTY_PRODUCT,
           ...product,
-          flavor:     Array.isArray(product.flavor)    ? product.flavor.join(', ')    : product.flavor    || '',
-          tags:       Array.isArray(product.tags)      ? product.tags.join(', ')      : product.tags      || '',
-          badges:     Array.isArray(product.badges)    ? product.badges.join(', ')    : product.badges    || '',
-          variants:   Array.isArray(product.variants)
-                        ? product.variants.map(v => v.label || v).join(', ')
-                        : product.variants || '',
+          flavor:   Array.isArray(product.flavor) ? product.flavor.join(', ') : product.flavor || '',
+          tags:     Array.isArray(product.tags)   ? product.tags.join(', ')   : product.tags   || '',
+          badges:   Array.isArray(product.badges) ? product.badges.join(', ') : product.badges || '',
+          variants: Array.isArray(product.variants) && product.variants.length > 0
+            ? product.variants.map(v => ({ name: v.name || '', priceModifier: v.priceModifier ?? 0, stock: v.stock ?? 0, image: v.image || '' }))
+            : [{ name: '', priceModifier: 0, stock: 0, image: '' }],
         }
       : EMPTY_PRODUCT
   );
@@ -113,6 +113,20 @@ const ProductFormModal = ({ product, onClose, onSave }) => {
     setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
   };
 
+  const handleVariantChange = (index, field, value) => {
+    const updated = form.variants.map((v, i) =>
+      i === index ? { ...v, [field]: (field === 'name' || field === 'image') ? value : parseFloat(value) || 0 } : v
+    );
+    setForm({ ...form, variants: updated });
+  };
+
+  const addVariant = () => setForm({ ...form, variants: [...form.variants, { name: '', priceModifier: 0, stock: 0, image: '' }] });
+
+  const removeVariant = (index) => {
+    if (form.variants.length === 1) return;
+    setForm({ ...form, variants: form.variants.filter((_, i) => i !== index) });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim())        { toast.error('Product name is required'); return; }
@@ -129,7 +143,7 @@ const ProductFormModal = ({ product, onClose, onSave }) => {
       flavor:     splitTrim(form.flavor),
       tags:       splitTrim(form.tags),
       badges:     splitTrim(form.badges),
-      variants:   splitTrim(form.variants).map(label => ({ label })),
+      variants:   form.variants.filter(v => v.name.trim()),
     };
 
     Object.keys(payload).forEach(k => { if (payload[k] === '') delete payload[k]; });
@@ -207,8 +221,30 @@ const ProductFormModal = ({ product, onClose, onSave }) => {
               <input name="origin" value={form.origin} onChange={handleChange} className="input w-full" placeholder="Darjeeling, India" />
             </Field>
 
-            <Field label="Tags" hint="(comma separated)">
-              <input name="tags" value={form.tags} onChange={handleChange} className="input w-full" placeholder="premium, bestseller" />
+            <Field label="Badges" hint="(include Vegan, Organic, etc.)">
+              <div className="flex flex-wrap gap-3 mt-1">
+                {['Vegan', 'Organic', 'Gluten-Free', 'Caffeine-Free'].map(badge => {
+                  const active = (form.badges || '').split(',').map(s => s.trim()).includes(badge);
+                  return (
+                    <label key={badge} className="flex items-center gap-1.5 cursor-pointer select-none text-sm text-gray-700">
+                      <input
+                        type="checkbox"
+                        checked={active}
+                        className="w-4 h-4 accent-tea-600"
+                        onChange={e => {
+                          const current = (form.badges || '').split(',').map(s => s.trim()).filter(Boolean);
+                          const updated = e.target.checked
+                            ? [...current, badge]
+                            : current.filter(b => b !== badge);
+                          setForm(f => ({ ...f, badges: updated.join(', ') }));
+                        }}
+                      />
+                      {badge}
+                    </label>
+                  );
+                })}
+              </div>
+              <input name="badges" value={form.badges} onChange={handleChange} className="input w-full mt-2" placeholder="Or type custom badges, comma separated" />
             </Field>
 
             {/* ── Badges & Variants ── */}
@@ -221,9 +257,51 @@ const ProductFormModal = ({ product, onClose, onSave }) => {
             </div>
 
             <div className="col-span-2">
-              <Field label="Variants" hint="(comma separated — shown as selectable buttons)">
-                <input name="variants" value={form.variants} onChange={handleChange} className="input w-full" placeholder="50g bag, 100g bag, 250g bag, Tin & bag, Sampler" />
-              </Field>
+              <label className="text-xs font-medium text-gray-600 mb-2 block">
+                Variants <span className="text-gray-400 font-normal">(name, price modifier, stock, image URL)</span>
+              </label>
+              <div className="space-y-2">
+                {form.variants.map((v, i) => (
+                  <div key={i} className="flex gap-2 items-center">
+                    <input
+                      value={v.name}
+                      onChange={e => handleVariantChange(i, 'name', e.target.value)}
+                      className="input flex-1"
+                      placeholder="e.g. 50g bag"
+                    />
+                    <input
+                      type="number" step="0.01"
+                      value={v.priceModifier}
+                      onChange={e => handleVariantChange(i, 'priceModifier', e.target.value)}
+                      className="input w-24"
+                      placeholder="+price"
+                      title="Price modifier ($)"
+                    />
+                    <input
+                      type="number" min="0"
+                      value={v.stock}
+                      onChange={e => handleVariantChange(i, 'stock', e.target.value)}
+                      className="input w-20"
+                      placeholder="stock"
+                      title="Stock quantity"
+                    />
+                    <input
+                      value={v.image || ''}
+                      onChange={e => handleVariantChange(i, 'image', e.target.value)}
+                      className="input flex-1"
+                      placeholder="Image URL (optional)"
+                      title="Variant image URL"
+                    />
+                    <button type="button" onClick={() => removeVariant(i)}
+                      className="text-red-400 hover:text-red-600 text-lg leading-none px-1 disabled:opacity-30"
+                      disabled={form.variants.length === 1}>×</button>
+                  </div>
+                ))}
+              </div>
+              <button type="button" onClick={addVariant}
+                className="mt-2 text-xs text-tea-600 hover:text-tea-800 underline">
+                + Add variant
+              </button>
             </div>
 
             {/* ── Thumbnail ── */}
@@ -254,7 +332,9 @@ const ProductFormModal = ({ product, onClose, onSave }) => {
 
               {form.thumbnail && (
                 <div className="flex items-center gap-3 mt-2">
-                  <img src={form.thumbnail} alt="Preview" className="w-14 h-14 rounded-lg object-cover border border-gray-200" onError={e => { e.target.style.display='none'; }} />
+                  <div className="w-16 h-16 rounded-xl bg-[#f0eeeb] flex items-center justify-center overflow-hidden border border-gray-200">
+                    <img src={form.thumbnail} alt="Preview" className="w-full h-full object-contain p-1" onError={e => { e.target.style.display='none'; }} />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs text-gray-400 truncate">{form.thumbnail}</p>
                     <button type="button" onClick={() => setForm(p => ({ ...p, thumbnail: '' }))} className="text-xs text-red-400 hover:text-red-600 mt-0.5">Remove</button>
@@ -278,8 +358,18 @@ const ProductFormModal = ({ product, onClose, onSave }) => {
               <input name="brewingTime" value={form.brewingTime} onChange={handleChange} className="input w-full" placeholder="1 min" />
             </Field>
 
-            <Field label="Cool After">
-              <input name="coolAfter" value={form.coolAfter} onChange={handleChange} className="input w-full" placeholder="5 minutes" />
+            <Field label="Color After 3 Minutes" hint="(CSS color, e.g. #c0392b or brown)">
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <input
+                  type="color"
+                  name="coolAfter"
+                  value={form.coolAfter || '#c0392b'}
+                  onChange={handleChange}
+                  className="w-10 h-9 rounded border border-gray-300 cursor-pointer p-0.5"
+                  title="Pick a color"
+                />
+                <input name="coolAfter" value={form.coolAfter} onChange={handleChange} className="input flex-1" placeholder="#c0392b" />
+              </div>
             </Field>
 
             {/* ── About This Tea ── */}

@@ -163,6 +163,8 @@ export const LoginPage = () => {
 export const RegisterPage = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from?.pathname || '/shop';
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
   const [loading, setLoading] = useState(false);
 
@@ -173,7 +175,7 @@ export const RegisterPage = () => {
     try {
       await register({ name: form.name, email: form.email, password: form.password });
       toast.success('Account created!');
-      navigate('/shop');
+      navigate(from, { replace: true });
     } catch (err) {
       toast.error(err.response?.data?.message || 'Registration failed');
     } finally {

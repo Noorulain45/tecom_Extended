@@ -272,19 +272,11 @@ const CartPage = () => {
     </div>
   );
 
-  /* ── Not signed in ── */
-  if (!user) return (
-    <div className="cart-root">
-      <style>{styles}</style>
-      <Stepper />
-      <div className="cart-state">
-        <span className="cart-state-icon">🛍</span>
-        <h2>Sign in to view your bag</h2>
-        <p>You need an account to save items to your bag.</p>
-        <Link to="/login">Sign In</Link>
-      </div>
-    </div>
-  );
+  /* ── Not signed in — redirect to login ── */
+  if (!user) {
+    navigate('/login', { state: { from: { pathname: '/cart' } }, replace: true });
+    return null;
+  }
 
   /* ── Loading ── */
   if (cartLoading) return (

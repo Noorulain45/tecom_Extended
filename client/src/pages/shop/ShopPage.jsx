@@ -353,7 +353,7 @@ const ShopProductCard = ({ product }) => {
       </div>
       <div className="text-center">
         <p className="text-[9px] tracking-widest uppercase text-gray-400 mb-0.5" style={mono}>
-          {product.origin || 'Ceylon Garden'}
+          {product.category ? product.category.replace(/-/g, ' ') : 'Tea'}
         </p>
         <p
           className="text-[12px] text-gray-800 mb-1 leading-snug group-hover:text-gray-500 transition-colors font-medium"

@@ -5,7 +5,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
 const swaggerUi = require('swagger-ui-express');
-const swaggerDefinition = require('./swagger');
+const swaggerDefinition = require('./swagger');   
 
 const authRoutes = require('./routes/auth');
 const productRoutes = require('./routes/products');
@@ -20,6 +20,7 @@ const app = express();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
+  'http://localhost:3001',
   'https://tea-platform.vercel.app',
   'https://client-nu-azure.vercel.app',
   process.env.CLIENT_URL
@@ -36,7 +37,7 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-app.use(morgan('dev'));
+app.use(morgan('dev')); 
 app.use('/uploads', express.static('uploads'));
 
 const connectDB = async () => { 

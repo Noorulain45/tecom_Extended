@@ -65,9 +65,6 @@ const ProductTile = ({ product }) => (
       >
         {product.name}
       </p>
-      <p className="text-[10px] text-gray-400 mt-0.5" style={mono}>
-        ${product.basePrice?.toFixed(2)}
-      </p>
     </div>
   </Link>
 );
@@ -225,15 +222,11 @@ const HomePage = () => {
           >
             Our Collections
           </h2>
-          {!loadingProducts && products.length > 0 && (
-            <p className="text-[10px] tracking-widest uppercase text-gray-400 mt-2" style={mono}>
-              Hand-picked favourites
-            </p>
-          )}
+
         </div>
 
         {/* 3×3 Grid */}
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-6">
           {renderGrid()}
         </div>
 

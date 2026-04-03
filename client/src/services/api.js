@@ -5,14 +5,20 @@ export const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Attach token to every request
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
+// NestJS service axios instance
+export const nestApi = axios.create({
+  baseURL: (import.meta.env.VITE_NEST_URL || 'http://localhost:3002') + '/api',
+  headers: { 'Content-Type': 'application/json' },
 });
+
+// Attach token to every request
+const attachToken = (config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+};
+api.interceptors.request.use(attachToken);
+nestApi.interceptors.request.use(attachToken);
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 export const authAPI = {
@@ -85,3 +91,14 @@ export const adminAPI = {
 };
 
 export default api;
+
+// ── Reviews (NestJS) ──────────────────────────────────────────────────────────
+export const reviewsAPI = {
+  getByProduct: (productId) => nestApi.get(`/reviews/product/${productId}`),
+  add: (productId, data) => nestApi.post(`/reviews/product/${productId}`, data),
+  addReply: (reviewId, data) => nestApi.post(`/reviews/${reviewId}/reply`, data),
+  deleteReply: (reviewId, replyId) => nestApi.delete(`/reviews/${reviewId}/reply/${replyId}`),
+  toggleLike: (reviewId) => nestApi.post(`/reviews/${reviewId}/like`),
+  delete: (reviewId) => nestApi.delete(`/reviews/${reviewId}`),
+  flag: (reviewId) => nestApi.patch(`/reviews/${reviewId}/flag`),
+};

@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const {
-  getProducts, getProduct, createProduct, updateProduct, deleteProduct,
+  getProducts, getProduct, getProductsByCategory, createProduct, updateProduct, deleteProduct,
   addReview, getVariant, addVariant, updateVariant,
 } = require('../controllers/productController');
 const { protect, adminOnly } = require('../middleware/auth');
 
-// Public routes
+// Public routes — specific routes MUST come before /:id
 router.get('/', getProducts);
+router.get('/category/:category', getProductsByCategory);
 router.get('/:id', getProduct);
 router.get('/:id/variants/:variantId', getVariant);
 

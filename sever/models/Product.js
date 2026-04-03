@@ -6,6 +6,7 @@ const variantSchema = new mongoose.Schema({
   priceModifier: { type: Number, default: 0 },
   stock:         { type: Number, required: true, default: 0, min: 0 },
   sku:           { type: String, unique: true, sparse: true },
+  image:         { type: String },
 });
 
 const reviewSchema = new mongoose.Schema(
@@ -42,7 +43,13 @@ const productSchema = new mongoose.Schema(
     tags:         [{ type: String }],
     brewingTime:  { type: String },
     temperature:  { type: String },
+    servingSize:  { type: String },
+    coolAfter:    { type: String },
     caffeineLevel:{ type: String, enum: ['none', 'low', 'medium', 'high'] },
+    quality:      { type: String },
+    allergens:    { type: String },
+    ingredients:  { type: String },
+    badges:       [{ type: String }],
   },
   { timestamps: true }
 );

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { productAPI } from "../../services/api";
 import { useCart } from "../../context/CartContext";
 import { useAuth } from "../../context/AuthContext";
-import toast from "react-hot-toast";
+import ReviewsSection from "../../components/products/ReviewsSection";
 
 /* ─────────────────────────────────────────────────────────────────────────────
    Styles
@@ -44,191 +44,206 @@ const styles = `
 
   /* ── Breadcrumb ── */
   .breadcrumb {
-    padding: 16px 60px; font-size: 11px;
-    letter-spacing: 0.06em; text-transform: uppercase;
-    color: #a89f95; border-bottom: 1px solid #ececec;
+    padding: 14px 60px; font-size: 10.5px;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: #a89f95;
   }
   .breadcrumb a { color: #a89f95; text-decoration: none; transition: color 0.15s; }
   .breadcrumb a:hover { color: #1c1814; }
-  .breadcrumb .sep { margin: 0 8px; }
+  .breadcrumb .sep { margin: 0 4px; }
   .breadcrumb .current { color: #1c1814; }
 
   /* ── Hero ── */
-  .hero { display: grid; grid-template-columns: 55% 45%; min-height: 560px; }
-  .hero-image { overflow: hidden; }
-  .hero-image img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .hero {
+    display: grid; grid-template-columns: 44% 56%;
+    padding: 0 60px 60px; gap: 52px; align-items: start;
+  }
+  .hero-image {
+    background: #f0eeeb; border-radius: 4px; overflow: hidden;
+    display: flex; align-items: center; justify-content: center;
+    aspect-ratio: 1 / 1;
+  }
+  .hero-image img { width: 100%; height: 100%; object-fit: contain; display: block; }
   .hero-image-placeholder {
-    width: 100%; height: 100%; min-height: 400px;
-    background: #f7f5f2; display: flex; align-items: center;
+    width: 100%; height: 100%; min-height: 360px;
+    background: #f0eeeb; display: flex; align-items: center;
     justify-content: center; font-size: 64px;
   }
-  .hero-info {
-    padding: 52px 60px 52px 52px;
-    display: flex; flex-direction: column;
-    border-left: 1px solid #ececec;
-  }
-  .category-label {
-    font-size: 10.5px; letter-spacing: 0.18em; text-transform: uppercase;
-    color: #c4b49a; font-weight: 500; margin-bottom: 14px;
-  }
+  .hero-info { padding-top: 8px; display: flex; flex-direction: column; }
+
   .product-name {
     font-family: 'Prosto One', cursive;
-    font-size: 48px; font-weight: 400; line-height: 1.1;
-    color: #1c1814; margin-bottom: 14px;
+    font-size: 38px; font-weight: 400; line-height: 1.15;
+    color: #1c1814; margin-bottom: 10px;
   }
-  .product-tagline { font-size: 13px; color: #7a7268; line-height: 1.7; font-weight: 300; margin-bottom: 22px; }
-  .badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+  .product-tagline { font-size: 13px; color: #7a7268; line-height: 1.7; font-weight: 300; margin-bottom: 18px; }
+
+  /* Attribute badges */
+  .badges { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 22px; align-items: center; }
   .badge {
-    font-size: 10.5px; letter-spacing: 0.07em; font-weight: 500;
-    padding: 5px 13px; border-radius: 20px;
-    border: 1px solid #e0e0e0; color: #7a7268; background: transparent;
+    font-size: 12px; font-weight: 400; color: #1c1814;
+    display: flex; align-items: center; gap: 6px;
+    background: transparent; border: none; padding: 0;
   }
-  .divider { height: 1px; background: #ececec; margin: 0 0 26px; }
+
   .price {
     font-family: 'Prosto One', cursive;
-    font-size: 36px; font-weight: 400; color: #1c1814; margin-bottom: 26px;
+    font-size: 34px; font-weight: 400; color: #1c1814; margin-bottom: 22px;
   }
 
-  /* Variants */
-  .variants-label { font-size: 10px; letter-spacing: 0.14em; color: #c4b49a; font-weight: 500; text-transform: uppercase; margin-bottom: 10px; }
-  .variants { display: flex; gap: 7px; flex-wrap: wrap; margin-bottom: 28px; }
+  /* Variants — icon cards */
+  .variants-label { font-size: 12px; letter-spacing: 0.04em; color: #1c1814; font-weight: 400; margin-bottom: 12px; }
+  .variants { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 24px; }
   .variant-btn {
-    padding: 7px 14px; border: 1px solid #e0e0e0;
-    background: transparent; cursor: pointer; border-radius: 2px;
-    font-family: 'Jost', sans-serif; font-size: 11.5px;
-    color: #7a7268; transition: all 0.18s;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 10px 10px 8px; border: 1px solid #d8d4ce;
+    background: transparent; cursor: pointer; border-radius: 4px;
+    font-family: 'Jost', sans-serif; font-size: 11px;
+    color: #7a7268; transition: all 0.18s; min-width: 72px; gap: 6px;
   }
   .variant-btn:hover { border-color: #c4a882; color: #1c1814; }
-  .variant-btn.active { border-color: #1c1814; background: #1c1814; color: #fff; }
+  .variant-btn.active { border-color: #c4a882; background: #fff; color: #1c1814; box-shadow: 0 0 0 1px #c4a882; }
+  .variant-icon { display: flex; align-items: center; justify-content: center; }
 
   /* Qty + Add */
-  .purchase-row { display: flex; gap: 10px; align-items: center; margin-bottom: 20px; }
-  .qty-box { display: flex; align-items: center; border: 1px solid #e0e0e0; border-radius: 2px; overflow: hidden; }
-  .qty-btn { width: 40px; height: 46px; background: transparent; border: none; cursor: pointer; font-size: 20px; color: #7a7268; font-weight: 300; transition: background 0.12s; }
+  .purchase-row {
+    display: flex; gap: 16px; align-items: center; margin-bottom: 16px;
+  }
+  .qty-box {
+    display: flex; align-items: center;
+    border: 1px solid #d8d4ce; border-radius: 3px; overflow: hidden;
+  }
+  .qty-btn { width: 44px; height: 50px; background: transparent; border: none; cursor: pointer; font-size: 22px; color: #1c1814; font-weight: 300; transition: background 0.12s; }
   .qty-btn:hover { background: #f7f7f7; }
-  .qty-value { width: 48px; text-align: center; font-size: 14px; color: #1c1814; border: none; background: transparent; pointer-events: none; }
+  .qty-value { width: 44px; text-align: center; font-size: 14px; color: #1c1814; border: none; border-left: 1px solid #d8d4ce; border-right: 1px solid #d8d4ce; background: transparent; pointer-events: none; height: 50px; line-height: 50px; }
   .add-btn {
-    flex: 1; height: 46px; background: #1c1814; color: #fff;
-    border: none; cursor: pointer; border-radius: 2px;
+    height: 50px; padding: 0 32px; background: #1c1814; color: #fff;
+    border: none; cursor: pointer; border-radius: 3px;
     font-family: 'Jost', sans-serif; font-size: 11px;
     letter-spacing: 0.16em; font-weight: 500; text-transform: uppercase; transition: background 0.2s;
+    display: flex; align-items: center; gap: 8px;
   }
   .add-btn:hover { background: #332e28; }
   .add-btn.added { background: #4a7c59; }
   .add-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .shipping-note { font-size: 11.5px; color: #a89f95; display: flex; align-items: center; gap: 8px; }
+  .shipping-note { font-size: 11.5px; color: #a89f95; display: flex; align-items: center; gap: 8px; margin-top: 4px; }
 
   /* ── Details Section ── */
   .details-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    border-top: 1px solid #ececec;
-    background: #f4f2ee;
+    display: grid; grid-template-columns: 1fr 1fr;
+    border-top: 1px solid #ececec; background: #f4f2ee;
     font-family: 'Montserrat', sans-serif;
   }
   .steeping-col { padding: 48px 60px; }
   .about-col { padding: 48px 60px; }
-
   .section-title {
     font-family: 'Montserrat', sans-serif;
-    font-size: 28px; font-weight: 600; color: #1c1814; margin-bottom: 28px;
+    font-size: 26px; font-weight: 300; color: #1c1814;
+    margin-bottom: 28px; letter-spacing: 0;
   }
-
-  /* Steeping items — inline label: value */
-  .steeping-item { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .steeping-item { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid #dedad5; }
+  .steeping-item:last-child { border-bottom: none; }
   .steeping-icon { flex-shrink: 0; }
   .steeping-label {
-    font-size: 9.5px; letter-spacing: 0.14em; color: #1c1814;
+    font-size: 12px; letter-spacing: 0.1em; color: #1c1814;
     font-weight: 700; text-transform: uppercase;
-    display: inline; margin-right: 5px;
-    font-family: 'Montserrat', sans-serif;
+    display: inline; margin-right: 4px; font-family: 'Montserrat', sans-serif;
   }
-  .steeping-value {
-    font-size: 11.5px; color: #1c1814;
-    display: inline;
-    font-family: 'Montserrat', sans-serif;
-  }
-
-  /* About grid — single row with pipe separators */
-  .about-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0;
-    margin-bottom: 28px;
-    align-items: flex-start;
-  }
-  .about-item {
-    padding-right: 20px;
-    margin-right: 20px;
-    border-right: 1px solid #ccc9c4;
-  }
+  .steeping-value { font-size: 14px; color: #3a3530; display: inline; font-family: 'Montserrat', sans-serif; font-weight: 400; }
+  .color-dot { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; }
+  .about-grid { display: flex; flex-wrap: nowrap; gap: 0; margin-bottom: 32px; align-items: flex-start; }
+  .about-item { padding-right: 24px; margin-right: 24px; border-right: 1px solid #ccc9c4; }
   .about-item:last-child { border-right: none; margin-right: 0; padding-right: 0; }
   .about-label {
-    font-size: 9px; letter-spacing: 0.14em; color: #7a7268;
-    font-weight: 600; text-transform: uppercase; margin-bottom: 5px;
+    font-size: 12px; letter-spacing: 0.1em; color: #1c1814;
+    font-weight: 700; text-transform: uppercase; margin-bottom: 6px;
     font-family: 'Montserrat', sans-serif;
   }
-  .about-value {
-    font-size: 12px; color: #1c1814;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 400;
+  .about-value { font-size: 15px; color: #3a3530; font-family: 'Montserrat', sans-serif; font-weight: 400; }
+  .ingredients-block { margin-top: 8px; }
+  .ingredients-block .section-title {
+    font-size: 26px; font-weight: 300; margin-bottom: 10px;
+    font-family: 'Montserrat', sans-serif; color: #1c1814;
   }
-  .about-desc-label {
-    font-size: 9px; letter-spacing: 0.14em; color: #7a7268;
-    font-weight: 600; text-transform: uppercase; margin-bottom: 6px;
-    font-family: 'Montserrat', sans-serif;
-  }
-  .about-desc-value {
-    font-size: 12.5px; color: #7a7268; line-height: 1.75; font-weight: 300;
-    font-family: 'Montserrat', sans-serif;
-  }
-
-  /* ── Ingredients ── */
-  .ingredients-strip {
-    padding: 0 60px 52px;
-    background: #f4f2ee;
-    font-family: 'Montserrat', sans-serif;
-  }
-  .ingredients-strip .section-title {
-    font-size: 18px; margin-bottom: 10px;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 600;
-  }
-  .ingredients-text {
-    font-size: 12.5px; color: #7a7268; line-height: 1.85; font-weight: 300;
-    font-family: 'Montserrat', sans-serif;
-  }
+  .ingredients-text { font-size: 15px; color: #3a3530; line-height: 1.8; font-weight: 400; font-family: 'Montserrat', sans-serif; }
 
   /* ── Related ── */
   .related-section { padding: 68px 60px; border-top: 1px solid #ececec; }
-  .related-title {
-    font-family: 'Prosto One', cursive; font-size: 30px; font-weight: 400;
-    text-align: center; margin-bottom: 48px; color: #1c1814;
-  }
+  .related-title { font-family: 'Prosto One', cursive; font-size: 30px; font-weight: 400; text-align: center; margin-bottom: 48px; color: #1c1814; }
   .related-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
   .related-card { cursor: pointer; text-align: center; }
   .related-card:hover .related-img { transform: scale(1.06); }
-  .related-img-wrap {
-    background: #f4f3f0; margin-bottom: 16px;
-    overflow: hidden; display: flex; align-items: center; justify-content: center;
-    aspect-ratio: 1 / 1;
-  }
+  .related-img-wrap { background: #f4f3f0; margin-bottom: 16px; overflow: hidden; display: flex; align-items: center; justify-content: center; aspect-ratio: 1 / 1; }
   .related-img { width: 100%; height: 100%; object-fit: contain; transition: transform 0.4s ease; display: block; }
   .related-name { font-size: 13px; color: #1c1814; margin-bottom: 6px; line-height: 1.5; }
   .related-price { font-size: 12.5px; color: #a89f95; }
   .related-loading { text-align: center; color: #c4b49a; font-size: 13px; padding: 40px 0; }
 `;
 
+/* ── Variant SVG Icons ── */
+function BagIcon({ weight }) {
+  return (
+    <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* top seal */}
+      <rect x="10" y="2" width="26" height="4" rx="1" stroke="currentColor" strokeWidth="1.3" />
+      {/* gusset wings */}
+      <path d="M10 6 C4 10 2 18 2 27 C2 36 4 44 6 49" stroke="currentColor" strokeWidth="1.3" fill="none" />
+      <path d="M36 6 C42 10 44 18 44 27 C44 36 42 44 40 49" stroke="currentColor" strokeWidth="1.3" fill="none" />
+      {/* main body */}
+      <path d="M10 6 L10 6 Q10 6 10 6 L36 6 L40 49 L6 49 Z" stroke="currentColor" strokeWidth="1.3" fill="none" />
+      {/* bottom seal */}
+      <line x1="6" y1="49" x2="40" y2="49" stroke="currentColor" strokeWidth="1.3" />
+      {weight && (
+        <text x="23" y="32" textAnchor="middle" fontSize="10" fontWeight="500" fill="currentColor" fontFamily="Jost, sans-serif">
+          {weight}
+        </text>
+      )}
+    </svg>
+  );
+}
+
+function TinIcon({ weight }) {
+  return (
+    <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="23" cy="8" rx="16" ry="4" stroke="currentColor" strokeWidth="1.3" />
+      <rect x="7" y="8" width="32" height="36" stroke="currentColor" strokeWidth="1.3" fill="none" />
+      <ellipse cx="23" cy="44" rx="16" ry="4" stroke="currentColor" strokeWidth="1.3" />
+      {weight && (
+        <text x="23" y="30" textAnchor="middle" fontSize="10" fontWeight="500" fill="currentColor" fontFamily="Jost, sans-serif">
+          {weight}
+        </text>
+      )}
+    </svg>
+  );
+}
+
+function SamplerIcon() {
+  return (
+    <svg width="46" height="54" viewBox="0 0 46 54" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* tag shape */}
+      <path d="M8 4 L38 4 L38 38 L23 50 L8 38 Z" stroke="currentColor" strokeWidth="1.3" fill="none" />
+      <circle cx="23" cy="13" r="3" stroke="currentColor" strokeWidth="1.3" />
+      <line x1="23" y1="16" x2="23" y2="28" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
 /* ── Helpers ── */
 function normalise(p) {
   return {
     ...p,
     categoryLabel: (p.category || "").replace(/-/g, " ").toUpperCase(),
+    basePrice:     p.basePrice ?? p.price ?? 0,
     price:         p.basePrice ?? p.price ?? 0,
     tagline:       p.shortDescription || p.tagline || "",
     badges:        Array.isArray(p.badges) ? p.badges : [],
+    origin:        p.origin || "",
     variants:      Array.isArray(p.variants)
-                     ? p.variants.map(v => (typeof v === "string" ? { label: v } : v))
+                     ? p.variants.map(v =>
+                         typeof v === "string"
+                           ? { label: v, priceModifier: 0 }
+                           : { ...v, label: v.label || v.name || "" }
+                       )
                      : [],
     image:         p.thumbnail || p.image || "",
     steeping: {
@@ -248,6 +263,15 @@ function normalise(p) {
       ingredients: p.ingredients  || "",
     },
   };
+}
+
+function getVariantIcon(label) {
+  const lower = label.toLowerCase();
+  const weightMatch = label.match(/(\d+\s*(?:kg|g))/i);
+  const weight = weightMatch ? weightMatch[1].replace(/\s+/g, "") : "";
+  if (lower.includes("sampler")) return <SamplerIcon />;
+  if (lower.includes("tin"))     return <TinIcon weight={weight} />;
+  return <BagIcon weight={weight} />;
 }
 
 /* ─────────────────────────────────────────────────────────────────────────────
@@ -270,7 +294,6 @@ export default function TeaProductPage() {
   const [adding, setAdding]                   = useState(false);
   const [added, setAdded]                     = useState(false);
 
-  /* ── Fetch product ── */
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
@@ -326,11 +349,9 @@ export default function TeaProductPage() {
     return () => { cancelled = true; };
   }, [id]);
 
-  /* ── Add to Cart ── */
   const handleAddToCart = async () => {
     if (!user) {
-      toast.error("Please sign in to add items to your bag");
-      navigate("/login");
+      navigate("/login", { state: { from: { pathname: `/products/${id}` } } });
       return;
     }
     const variant   = product.variants.length > 0 ? product.variants[selectedVariant] : null;
@@ -348,18 +369,13 @@ export default function TeaProductPage() {
     }
   };
 
-  /* ── Loading ── */
   if (loading) return (
     <div className="tea-page">
       <style>{styles}</style>
-      <div className="tea-state">
-        <div className="spinner" />
-        <p>Loading product…</p>
-      </div>
+      <div className="tea-state"><div className="spinner" /><p>Loading product…</p></div>
     </div>
   );
 
-  /* ── Error / Not Found ── */
   if (error) return (
     <div className="tea-page">
       <style>{styles}</style>
@@ -373,20 +389,24 @@ export default function TeaProductPage() {
   );
 
   const steepingItems = [
-    { label: "SERVING SIZE",      value: product.steeping.servingSize,
+    { label: "SERVING SIZE",          value: product.steeping.servingSize,
       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4b49a" strokeWidth="1.5"><path d="M6 2v6c0 3.314 2.686 6 6 6s6-2.686 6-6V2"/><line x1="6" y1="5" x2="18" y2="5"/><path d="M6 22h12M12 14v8"/></svg> },
-    { label: "WATER TEMPERATURE", value: product.steeping.waterTemp,
+    { label: "WATER TEMPERATURE",     value: product.steeping.waterTemp,
       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4b49a" strokeWidth="1.5"><path d="M12 2C8.13 2 5 5.13 5 9c0 2.4 1.08 4.55 2.79 5.99L7 22h10l-.79-7.01C17.92 13.55 19 11.4 19 9c0-3.87-3.13-7-7-7z"/></svg> },
-    { label: "STEEPING TIME",     value: product.steeping.steepingTime,
+    { label: "STEEPING TIME",         value: product.steeping.steepingTime,
       icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#c4b49a" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> },
-    { label: "COLOR AFTER 3 MINUTES", value: product.steeping.coolAfter,
-      icon: <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d45c5c" strokeWidth="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> },
+    { label: "COLOR AFTER 3 MINUTES", value: product.steeping.coolAfter, isColor: true,
+      icon: null },
   ].filter(i => i.value);
 
   const hasDetails = steepingItems.length > 0 ||
     product.about.flavor || product.about.quality ||
     product.about.caffeine || product.about.allergens ||
     product.about.description;
+
+  const variant = product.variants.length > 0 ? product.variants[selectedVariant] : null;
+  const displayPrice = product.basePrice + (variant?.priceModifier ?? 0);
+  const variantImage = variant?.image || product.image;
 
   const btnLabel = adding ? "Adding…" : added ? "✓ Added" : "Add to bag";
 
@@ -397,7 +417,7 @@ export default function TeaProductPage() {
       {/* Breadcrumb */}
       <nav className="breadcrumb">
         <a href="/">Home</a><span className="sep">/</span>
-        <a href="/shop">Tea Collections</a><span className="sep">/</span>
+        <a href="/shop">Collections</a><span className="sep">/</span>
         <a href={`/shop?category=${product.category}`}>{product.categoryLabel}</a>
         <span className="sep">/</span>
         <span className="current">{product.name}</span>
@@ -406,37 +426,69 @@ export default function TeaProductPage() {
       {/* Hero */}
       <section className="hero">
         <div className="hero-image">
-          {product.image
-            ? <img src={product.image} alt={product.name} onError={e => { e.target.style.display="none"; e.target.nextSibling.style.display="flex"; }} />
+          {variantImage
+            ? <img src={variantImage} alt={product.name} onError={e => { e.target.style.display = "none"; e.target.nextSibling.style.display = "flex"; }} />
             : null}
-          <div className="hero-image-placeholder" style={{ display: product.image ? "none" : "flex" }}>🍵</div>
+          <div className="hero-image-placeholder" style={{ display: variantImage ? "none" : "flex" }}>🍵</div>
         </div>
 
         <div className="hero-info">
-          <p className="category-label">{product.categoryLabel}</p>
           <h1 className="product-name">{product.name}</h1>
           {product.tagline && <p className="product-tagline">{product.tagline}</p>}
 
-          {product.badges.length > 0 && (
+          {(product.origin || product.badges.length > 0) && (
             <div className="badges">
-              {product.badges.map(b => <span key={b} className="badge">{b}</span>)}
+              {product.origin && (
+                <span className="badge">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                  </svg>
+                  Origin: {product.origin}
+                </span>
+              )}
+              {product.badges.map(b => {
+                const lower = b.toLowerCase();
+                let icon = (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                  </svg>
+                );
+                if (lower.includes("organic")) icon = (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M3 3s4 0 7 3c2 2 3 5 3 5s-1-3-3-5c3 1 6 4 7 8-1 4-5 7-9 7-5 0-8-4-8-9 0-4 1-7 3-9z"/>
+                  </svg>
+                );
+                if (lower.includes("vegan")) icon = (
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M17 8C8 10 5.9 16.17 3.82 19.34A1 1 0 004.69 21 16.31 16.31 0 008 20c4-1 7-4 9-8 1 2 1 4 0 6a1 1 0 001.73.73C21 16 21 10 17 8z"/>
+                  </svg>
+                );
+                return <span key={b} className="badge">{icon}{b}</span>;
+              })}
             </div>
           )}
 
-          <div className="divider" />
-          <p className="price">€{Number(product.price).toFixed(2)}</p>
+          <p className="price">€{Number(displayPrice).toFixed(2)}</p>
 
           {product.variants.length > 0 && (
             <>
               <p className="variants-label">Variants</p>
               <div className="variants">
-                {product.variants.map((v, i) => (
-                  <button key={i}
-                    className={`variant-btn${selectedVariant === i ? " active" : ""}`}
-                    onClick={() => setSelectedVariant(i)}>
-                    {v.label}
-                  </button>
-                ))}
+                {product.variants.map((v, idx) => {
+                  const label = v.label || v;
+                  return (
+                    <button
+                      key={idx}
+                      className={`variant-btn${selectedVariant === idx ? " active" : ""}`}
+                      onClick={() => setSelectedVariant(idx)}
+                    >
+                      <span className="variant-icon">{getVariantIcon(label)}</span>
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
             </>
           )}
@@ -452,16 +504,20 @@ export default function TeaProductPage() {
               onClick={handleAddToCart}
               disabled={adding}
             >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" /><line x1="3" y1="6" x2="21" y2="6" />
+                <path d="M16 10a4 4 0 01-8 0" />
+              </svg>
               {btnLabel}
             </button>
           </div>
 
           <p className="shipping-note">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#a89f95" strokeWidth="1.5">
-              <rect x="1" y="3" width="15" height="13" rx="1"/>
-              <path d="M16 8h4l3 4v5h-7V8z"/>
-              <circle cx="5.5" cy="18.5" r="2.5"/>
-              <circle cx="18.5" cy="18.5" r="2.5"/>
+              <rect x="1" y="3" width="15" height="13" rx="1" />
+              <path d="M16 8h4l3 4v5h-7V8z" />
+              <circle cx="5.5" cy="18.5" r="2.5" />
+              <circle cx="18.5" cy="18.5" r="2.5" />
             </svg>
             Free shipping on orders over $50
           </p>
@@ -471,73 +527,46 @@ export default function TeaProductPage() {
       {/* Steeping + About */}
       {hasDetails && (
         <section className="details-section">
-          {/* Steeping */}
           <div className="steeping-col">
             <h2 className="section-title">Steeping instructions</h2>
             {steepingItems.map(item => (
               <div className="steeping-item" key={item.label}>
-                <span className="steeping-icon">{item.icon}</span>
+                {item.isColor
+                  ? <span className="color-dot" style={{ background: item.value }} />
+                  : <span className="steeping-icon">{item.icon}</span>
+                }
                 <p>
                   <span className="steeping-label">{item.label}: </span>
-                  <span className="steeping-value">{item.value}</span>
+                  {!item.isColor && <span className="steeping-value">{item.value}</span>}
                 </p>
               </div>
             ))}
           </div>
 
-          {/* About */}
           <div className="about-col">
             <h2 className="section-title">About this tea</h2>
-
-            {/* Pipe-separated row */}
             <div className="about-grid">
-              {product.about.flavor    && (
-                <div className="about-item">
-                  <p className="about-label">Flavor</p>
-                  <p className="about-value">{product.about.flavor}</p>
-                </div>
-              )}
-              {product.about.quality   && (
-                <div className="about-item">
-                  <p className="about-label">Qualities</p>
-                  <p className="about-value">{product.about.quality}</p>
-                </div>
-              )}
-              {product.about.caffeine  && (
-                <div className="about-item">
-                  <p className="about-label">Caffeine</p>
-                  <p className="about-value">{product.about.caffeine}</p>
-                </div>
-              )}
-              {product.about.allergens && (
-                <div className="about-item">
-                  <p className="about-label">Allergens</p>
-                  <p className="about-value">{product.about.allergens}</p>
-                </div>
-              )}
+              {product.about.flavor    && <div className="about-item"><p className="about-label">Flavor</p><p className="about-value">{product.about.flavor}</p></div>}
+              {product.about.quality   && <div className="about-item"><p className="about-label">Qualities</p><p className="about-value">{product.about.quality}</p></div>}
+              {product.about.caffeine  && <div className="about-item"><p className="about-label">Caffeine</p><p className="about-value">{product.about.caffeine}</p></div>}
+              {product.about.allergens && <div className="about-item"><p className="about-label">Allergens</p><p className="about-value">{product.about.allergens}</p></div>}
             </div>
-
-            {/* Description below */}
-            {product.about.description && (
-              <div>
-                <p className="about-desc-label">Description</p>
-                <p className="about-desc-value">{product.about.description}</p>
+            {product.about.ingredients && (
+              <div className="ingredients-block">
+                <h3 className="section-title">Ingredient</h3>
+                <p className="ingredients-text">{product.about.ingredients}</p>
               </div>
             )}
           </div>
         </section>
       )}
 
-      {/* Ingredients */}
-      {product.about.ingredients && (
-        <div className="ingredients-strip">
-          <h3 className="section-title">Ingredient</h3>
-          <p className="ingredients-text">{product.about.ingredients}</p>
-        </div>
-      )}
-
-      {/* You May Also Like */}
+      {/* Reviews + Related */}
       <section className="related-section">
+        <div style={{ padding: "0 0 48px" }}>
+          <ReviewsSection productId={id} />
+        </div>
+
         <h2 className="related-title">You may also like</h2>
         {relatedLoading ? (
           <p className="related-loading">Finding similar teas…</p>
@@ -548,7 +577,7 @@ export default function TeaProductPage() {
             {related.map(p => {
               const firstVariant = Array.isArray(p.variants) && p.variants[0];
               const variantLabel = firstVariant
-                ? (firstVariant.label || firstVariant).replace(/bag|tin|sampler/gi, "").trim()
+                ? (firstVariant.label || firstVariant.name || "").replace(/bag|tin|sampler/gi, "").trim()
                 : null;
               return (
                 <div className="related-card" key={p._id} onClick={() => navigate(`/products/${p._id}`)}>

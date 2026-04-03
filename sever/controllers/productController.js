@@ -63,6 +63,30 @@ exports.getProducts = async (req, res) => {
   }
 };
 
+// @GET /api/products/category/:category
+exports.getProductsByCategory = async (req, res) => {
+  try {
+    const { limit = 10, page = 1 } = req.query;
+    const pageNum  = Math.max(1, parseInt(page));
+    const limitNum = Math.min(50, Math.max(1, parseInt(limit)));
+    const skip     = (pageNum - 1) * limitNum;
+
+    const filter = { isActive: true, category: req.params.category };
+    const [products, total] = await Promise.all([
+      Product.find(filter).sort('-createdAt').skip(skip).limit(limitNum).select('-reviews'),
+      Product.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: products,
+      pagination: { page: pageNum, limit: limitNum, total, totalPages: Math.ceil(total / limitNum) },
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // @GET /api/products/:id
 exports.getProduct = async (req, res) => {
   try {
@@ -71,6 +95,8 @@ exports.getProduct = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Product not found' });
     res.json({ success: true, data: product });
   } catch (err) {
+    if (err.name === 'CastError')
+      return res.status(404).json({ success: false, message: 'Product not found' });
     res.status(500).json({ success: false, message: err.message });
   }
 };

@@ -135,10 +135,26 @@ const NotificationBell = () => {
     setOpen(o => !o);
   };
 
+  const REVIEW_TYPES = new Set(['new_review', 'review_reply', 'review_liked', 'review_moderated', 'product_updated']);
+
+  const getNotifIcon = (notif) => {
+    if (notif.type === 'new_review')       return { icon: '⭐', bg: '#fef3c7', color: '#92400e' };
+    if (notif.type === 'review_reply')     return { icon: '💬', bg: '#dbeafe', color: '#1e40af' };
+    if (notif.type === 'review_liked')     return { icon: '👍', bg: '#d1fae5', color: '#065f46' };
+    if (notif.type === 'review_moderated') return { icon: '🚩', bg: '#fee2e2', color: '#991b1b' };
+    if (notif.type === 'product_updated')  return { icon: '🛍️', bg: '#ede9fe', color: '#5b21b6' };
+    const s = STATUS_COLORS[notif.status] || { bg: '#f3f4f6', color: '#374151' };
+    return { icon: STATUS_ICONS[notif.status] || '•', bg: s.bg, color: s.color };
+  };
+
   const handleClickNotif = (notif) => {
     markRead(notif.id);
     setOpen(false);
-    navigate(`/orders/${notif.orderId}`);
+    if (REVIEW_TYPES.has(notif.type) && notif.productId) {
+      navigate(`/shop/product/${notif.productId}`);
+    } else if (notif.orderId) {
+      navigate(`/orders/${notif.orderId}`);
+    }
   };
 
   return (
@@ -183,23 +199,22 @@ const NotificationBell = () => {
               </div>
             ) : (
               notifications.map(notif => {
-                const s = STATUS_COLORS[notif.status] || { bg: '#f3f4f6', color: '#374151' };
-                const icon = STATUS_ICONS[notif.status] || '•';
+                const { icon, bg, color } = getNotifIcon(notif);
                 return (
                   <div
                     key={notif.id}
                     className={`nb-item${!notif.read ? ' unread' : ''}`}
                     onClick={() => handleClickNotif(notif)}
                   >
-                    <div className="nb-icon" style={{ background: s.bg, color: s.color }}>
+                    <div className="nb-icon" style={{ background: bg, color }}>
                       {icon}
                     </div>
                     <div className="nb-item-body">
                       <p className="nb-item-title">{notif.title}</p>
                       <p className="nb-item-body-text">{notif.body}</p>
                       <div className="nb-item-meta">
-                        <span className="nb-item-order">{notif.orderNumber}</span>
-                        <span className="nb-item-time">· {timeAgo(notif.createdAt)}</span>
+                        {notif.orderNumber && <span className="nb-item-order">{notif.orderNumber}</span>}
+                        <span className="nb-item-time">{notif.orderNumber ? '· ' : ''}{timeAgo(notif.createdAt)}</span>
                       </div>
                     </div>
                     {!notif.read && <div className="nb-unread-dot" />}
